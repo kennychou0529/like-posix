@@ -30,11 +30,10 @@
  *
  */
 
+
+
 /**
- * @addtogroup syscalls
- *
- * @file fpwr_config.h
- * @{
+ * sample configuration for the freertos-posix-wrapper project.
  */
 
 #ifndef FPWR_CONFIG_H_
@@ -58,7 +57,3 @@
 #define DEVICE_INTERFACE_DIRECTORY 	"/dev/"
 
 #endif /* FPWR_CONFIG_H_ */
-
-/**
- * @}
- */
