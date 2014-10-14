@@ -33,11 +33,11 @@
 
 
 /**
- * sample configuration for the freertos-posix-wrapper project.
+ * sample configuration for the like-posix project.
  */
 
-#ifndef FPWR_CONFIG_H_
-#define FPWR_CONFIG_H_
+#ifndef LIKEPOSIX_CONFIG_H_
+#define LIKEPOSIX_CONFIG_H_
 
 /**
  * fudge factor for the file table, presently can be any value higher than STDIN_FILENO...
@@ -56,4 +56,4 @@
  */
 #define DEVICE_INTERFACE_DIRECTORY 	"/dev/"
 
-#endif /* FPWR_CONFIG_H_ */
+#endif /* LIKEPOSIX_CONFIG_H_ */

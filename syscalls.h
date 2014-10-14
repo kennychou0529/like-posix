@@ -36,15 +36,15 @@
  * @file syscalls.h
  * @{
  */
-#ifndef SYSCALLS_H_
-#define SYSCALLS_H_
+#ifndef LIKE_POSIX_SYSCALLS_H_
+#define LIKE_POSIX_SYSCALLS_H_
 
 #include <stdint.h>
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
 #include "ff.h"
-#include "fpwr_config.h"
+#include "likeposix_config.h"
 
 #ifdef __cplusplus
  extern "C" {
@@ -88,7 +88,7 @@ dev_ioctl_t* install_device(char* name,
  }
 #endif
 
-#endif /* SYSCALLS_H_ */
+#endif /* LIKE_POSIX_SYSCALLS_H_ */
 
  /**
   * @}
