@@ -223,12 +223,14 @@ inline int __create_filtab_item(_tinystat_t** fdes, const char* name, int flags,
 				ff_flags |= FA_WRITE;
 
 			if(fd->flags&O_CREAT)
-				ff_flags |= FA_OPEN_ALWAYS;
+			{
+				if(fd->flags&O_TRUNC)
+					ff_flags |= FA_CREATE_ALWAYS;
+				else
+					ff_flags |= FA_OPEN_ALWAYS;
+			}
 			else
 				ff_flags |= FA_OPEN_EXISTING;
-
-			if(fd->flags&(O_TRUNC|O_CREAT))
-				ff_flags |= FA_CREATE_ALWAYS;
 
 			// TODO can we used this flag? FA_CREATE_NEW
 		}
