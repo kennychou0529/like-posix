@@ -1,0 +1,3 @@
+hostname setahostname
+#resolv dhcp
+resolv static

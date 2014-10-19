@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 122
+/svn/research/!svn/ver/334081/DVV/Tools/Hardware/stm32/trunk/stm32_applications/webservers/radio_controller/system/network
+END
+interface
+K 25
+svn:wc:ra_dav:version-url
+V 132
+/svn/research/!svn/ver/334081/DVV/Tools/Hardware/stm32/trunk/stm32_applications/webservers/radio_controller/system/network/interface
+END
+ntp
+K 25
+svn:wc:ra_dav:version-url
+V 126
+/svn/research/!svn/ver/334079/DVV/Tools/Hardware/stm32/trunk/stm32_applications/webservers/radio_controller/system/network/ntp
+END
