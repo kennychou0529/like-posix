@@ -393,6 +393,10 @@ dev_ioctl_t* install_device(char* name,
 
 	log_syslog(NULL, "installing %s...", name);
 
+	// try to create the directory first, if it fails it is already there
+	// or, the disk isnt in. the next step will also fail in that case.
+	f_mkdir(DEVICE_INTERFACE_DIRECTORY);
+
 	// is it possible to open the device file?
 	if(f_open(&f, (const TCHAR*)name, FA_WRITE|FA_OPEN_ALWAYS) == FR_OK)
 	{
