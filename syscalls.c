@@ -556,7 +556,7 @@ int _write(int file, char *buffer, unsigned int count)
 {
 	int n = EOF;
 
-	if(file == STDOUT_FILENO || file == STDERR_FILENO)
+	if(file == STDOUT_FILENO || file == STDERR_FILENO || file == (intptr_t)stdout || file == (intptr_t)stderr)
 	{
 		for(n = 0; n < (int)count; n++)
 			phy_putc(*buffer++);
@@ -601,7 +601,7 @@ int _write(int file, char *buffer, unsigned int count)
 int _read(int file, char *buffer, int count)
 {
 	int n = EOF;
-	if(file == STDIN_FILENO)
+	if(file == STDIN_FILENO || file == (intptr_t)stdin)
 	{
 		for(n = 0; n < count; n++)
 			*buffer++ = phy_getc();
@@ -633,7 +633,12 @@ int _read(int file, char *buffer, int count)
 int fsync(int file)
 {
 	int res = EOF;
-	if(file == STDIN_FILENO ||file == STDOUT_FILENO || file == STDERR_FILENO)
+	if(file == STDIN_FILENO ||
+			file == STDOUT_FILENO ||
+			file == STDERR_FILENO ||
+			file == (intptr_t)stdout ||
+			file == (intptr_t)stderr ||
+			file == (intptr_t)stdin)
 	{
 		res = 0;
 	}
@@ -665,7 +670,12 @@ int fsync(int file)
 int _fstat(int file, struct stat *st)
 {
 	int res = EOF;
-	if(file == STDIN_FILENO ||file == STDOUT_FILENO || file == STDERR_FILENO)
+	if(file == STDIN_FILENO ||
+			file == STDOUT_FILENO ||
+			file == STDERR_FILENO ||
+			file == (intptr_t)stdout ||
+			file == (intptr_t)stderr ||
+			file == (intptr_t)stdin)
 	{
 		st->st_size = 1;
 		st->st_mode = S_IFCHR;
@@ -732,7 +742,12 @@ int _isatty(int file)
 {
 	int res = 0;
 
-	if(file == STDIN_FILENO ||file == STDOUT_FILENO || file == STDERR_FILENO)
+	if(file == STDIN_FILENO ||
+			file == STDOUT_FILENO ||
+			file == STDERR_FILENO ||
+			file == (intptr_t)stdout ||
+			file == (intptr_t)stderr ||
+			file == (intptr_t)stdin)
 		res = 1;
 	else
 	{
