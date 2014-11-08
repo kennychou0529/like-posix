@@ -26,7 +26,7 @@ relies upon:
  * int unlink(char *name)
  * int rename(const char *oldname, const char *newname)
 
-**minimally system calls**
+**minimal system calls**
 
  * void _exit(int i)
  * caddr_t _sbrk(int incr)
@@ -104,23 +104,28 @@ Base Filesystem
 
 Many projects are better when based on a structured filessystem.
 like-posix provides a filesytem template that can be installed on an SD card.
-It is loosely structured, similarly to the root filesystem of a posix OS.
+It is loosely structured, as follows:
 
-
- - /dev/
+ - /dev
  	- devices such as serial and USB ports installed here, IO may be performed on them just like normal files.
  	- for serial devices the file naming convention will be "ttySx", starting at 0
- - /var/log/
+ - /var/log
  	- log files are stored here, syslog and errorlog for example
- - /var/lib/httpd/
+ - /var/lib/httpd
  	- default location for files served by an http server
- - /etc/network/
+ - /etc/network
  	- network configuration files live here: interface, ntp, resolv...
- - /etc/logging/
+ - /etc/logging
  	- logging configuration files live here: logging.conf
- - /home/user/
+ - /etc/shell
+ 	- shell server configuration files live here: shelld_config
+ - /etc/echo
+ 	- echo server configuration files live here: echod_config
+ - /etc/http
+ 	- http server configuration files live here: httpd_config
+ - /home/user
  	- there is no concept of the "user", but this is a good place to put random files 
- - /tmp/
+ - /tmp
  	- temporary files are to be created here
  	
  
