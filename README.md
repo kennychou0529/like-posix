@@ -25,6 +25,12 @@ relies upon:
  * int lseek(int file, int offset, int whence)
  * int unlink(char *name)
  * int rename(const char *oldname, const char *newname)
+ * char* getcwd(char* buffer, size_t size)
+ * DIR* opendir(const char *name)
+ * int closedir(DIR *dirp)
+ * struct dirent* readdir(DIR *dirp)
+ * int chdir(const char *path)
+ * int mkdir(const char *pathname, mode_t mode)
 
 **minimal system calls**
 

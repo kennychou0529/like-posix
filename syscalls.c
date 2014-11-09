@@ -50,7 +50,7 @@
  * - FatFs
  * - cutensils
  *
- * The following functions are "functional":
+ * The following functions are available:
  *
  * int open(const char *name, int flags, int mode)
  * int close(int file)
@@ -64,11 +64,18 @@
  * int unlink(char *name)
  * int rename(const char *oldname, const char *newname)
  * void exit(int i)
+ * char* getcwd(char* buffer, size_t size)
+ * DIR* opendir(const char *name)
+ * int closedir(DIR *dirp)
+ * struct dirent* readdir(DIR *dirp)
+ * int chdir(const char *path)
+ * int mkdir(const char *pathname, mode_t mode)
  *
  * @file syscalls.c
  * @{
  */
 
+#include <dirent.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -126,6 +133,7 @@ static const unsigned short heapSTRUCT_SIZE	=
  		( sizeof( xBlockLink ) + portBYTE_ALIGNMENT -
  		( sizeof( xBlockLink ) % portBYTE_ALIGNMENT ) );
 static _filtab_t filtab;
+struct dirent ent;
 
 
 /**
@@ -657,6 +665,101 @@ int fsync(int file)
 	}
 
 	return res;
+}
+
+/**
+ * gets the current working directory - follows the GNU version
+ * in that id buffer is set to NULL, a buffer of size bytes is allocated
+ * to hold the cwd string. it must be freed afterward by the user...
+ */
+char* getcwd(char* buffer, size_t size)
+{
+    if(buffer == NULL)
+        buffer = malloc(size);
+
+    if(buffer)
+    {
+        if(f_getcwd((TCHAR*)buffer, (UINT)size) != FR_OK)
+        {
+            free(buffer);
+            buffer = NULL;
+        }
+    }
+
+    return buffer;
+}
+
+/**
+ * allocates and populates a DIR info struct.
+ * returns NULL if there was no memory allocated or the directory specified didnt exist.
+ * the directory must be closed with closedir() by the user.
+ */
+DIR* opendir(const char *name)
+{
+    DIR* dir = malloc(sizeof(DIR));
+
+    if(dir)
+    {
+        if(f_opendir(dir, (const TCHAR*)name) != FR_OK)
+        {
+            free(dir);
+            dir = NULL;
+        }
+    }
+
+    return dir;
+}
+/**
+ * closes a directory opened with opendir.
+ * returns 0 on success, or -1 on error.
+ */
+int closedir(DIR *dir)
+{
+    if(dir)
+    {
+//        f_closedir(dir);
+        free(dir);
+    }
+
+    return 0;
+}
+
+/**
+ * reads directory info. returns a pointer to a struct dirent,
+ * as long as there are entries in the directory.
+ * returns NULL when there are no other entries in the directory.
+ */
+struct dirent* readdir(DIR *dirp)
+{
+    FILINFO info;
+
+    info.lfname = ent.d_name;
+    info.lfsize = sizeof(ent.d_name);
+
+    ent.d_name[0] = '\0';
+    ent.d_type = DT_REG;
+
+    if(f_readdir(dirp, &info) != FR_OK || !info.fname[0])
+        return NULL;
+
+    if(ent.d_name[0] == '\0')
+        strcpy(ent.d_name, info.fname);
+
+    if(info.fattrib & AM_DIR)
+        ent.d_type = DT_DIR;
+
+    return &ent;
+}
+
+int chdir(const char *path)
+{
+    return f_chdir((TCHAR*)path) == FR_OK ? 0 : -1;
+}
+
+int mkdir(const char *pathname, mode_t mode)
+{
+    (void)mode;
+    return f_mkdir(pathname) == FR_OK ? 0 : -1;
 }
 
 /**
