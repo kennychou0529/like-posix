@@ -92,7 +92,7 @@ void get_hw_time(unsigned long* secs, unsigned long* usecs);
 void set_hw_time(unsigned long secs, unsigned long usecs);
 
 #else
-#define get_hw_time(sec, usec) {sec = 0; usec = 0;}
+#define get_hw_time(sec, usec)
 #define set_hw_time(sec, usec)
 #endif
 

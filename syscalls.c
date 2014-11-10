@@ -1010,7 +1010,9 @@ _VOID _free_r(struct _reent *re, _PTR ptr) {
 int _gettimeofday(struct timeval *tp, struct timezone *tzp)
 {
 	(void)tzp;
-
+#if !USE_HARDWARE_TIME_DRIVER
+	(void)tp;
+#endif
 	get_hw_time((unsigned long*)&tp->tv_sec, (unsigned long*)&tp->tv_usec);
 
 	return 0;
