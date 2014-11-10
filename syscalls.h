@@ -84,6 +84,18 @@ dev_ioctl_t* install_device(char* name,
 							dev_ioctl_fn_t open_dev,
 							dev_ioctl_fn_t close_dev);
 
+#if USE_HARDWARE_TIME_DRIVER
+/**
+ * thesw must be defined somewhere in the device drivers.
+ */
+void get_hw_time(unsigned long* secs, unsigned long* usecs);
+void set_hw_time(unsigned long secs, unsigned long usecs);
+
+#else
+#define get_hw_time(sec, usec) {sec = 0; usec = 0;}
+#define set_hw_time(sec, usec)
+#endif
+
 #ifdef __cplusplus
  }
 #endif

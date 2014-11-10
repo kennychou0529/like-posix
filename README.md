@@ -31,6 +31,7 @@ relies upon:
  * struct dirent* readdir(DIR *dirp)
  * int chdir(const char *path)
  * int mkdir(const char *pathname, mode_t mode)
+ * int gettimeofday(struct timeval *tp, struct timezone *tzp)
 
 **minimal system calls**
 
@@ -100,6 +101,10 @@ the file likeposix_config.h is required at project level, to configure like-posi
  * it is reserved for devices.
  */
 #define DEVICE_INTERFACE_DIRECTORY 	"/dev/"
+/**
+ * use a time driver defined in the device drivers for your target.
+ */
+#define USE_HARDWARE_TIME_DRIVER 1
 
 #endif /* LIKEPOSIX_CONFIG_H_ */
 

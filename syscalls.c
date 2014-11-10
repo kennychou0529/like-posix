@@ -70,11 +70,13 @@
  * struct dirent* readdir(DIR *dirp)
  * int chdir(const char *path)
  * int mkdir(const char *pathname, mode_t mode)
+ * int gettimeofday(struct timeval *tp, struct timezone *tzp)
  *
  * @file syscalls.c
  * @{
  */
 
+#include <sys/time.h>
 #include <dirent.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -1003,6 +1005,15 @@ _PTR _malloc_r(struct _reent *re, size_t size) {
 _VOID _free_r(struct _reent *re, _PTR ptr) {
 	(void)re;
 	vPortFree(ptr);
+}
+
+int _gettimeofday(struct timeval *tp, struct timezone *tzp)
+{
+	(void)tzp;
+
+	get_hw_time((unsigned long*)&tp->tv_sec, (unsigned long*)&tp->tv_usec);
+
+	return 0;
 }
 
 /**
