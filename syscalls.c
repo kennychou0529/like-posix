@@ -71,6 +71,7 @@
  * int chdir(const char *path)
  * int mkdir(const char *pathname, mode_t mode)
  * int gettimeofday(struct timeval *tp, struct timezone *tzp)
+ * struct tm* localtime(time_t* time)
  *
  * @file syscalls.c
  * @{
@@ -135,7 +136,8 @@ static const unsigned short heapSTRUCT_SIZE	=
  		( sizeof( xBlockLink ) + portBYTE_ALIGNMENT -
  		( sizeof( xBlockLink ) % portBYTE_ALIGNMENT ) );
 static _filtab_t filtab;
-struct dirent ent;
+struct dirent _dirent;
+struct tm _lctime;
 
 
 /**
@@ -735,22 +737,22 @@ struct dirent* readdir(DIR *dirp)
 {
     FILINFO info;
 
-    info.lfname = ent.d_name;
-    info.lfsize = sizeof(ent.d_name);
+    info.lfname = _dirent.d_name;
+    info.lfsize = sizeof(_dirent.d_name);
 
-    ent.d_name[0] = '\0';
-    ent.d_type = DT_REG;
+    _dirent.d_name[0] = '\0';
+    _dirent.d_type = DT_REG;
 
     if(f_readdir(dirp, &info) != FR_OK || !info.fname[0])
         return NULL;
 
-    if(ent.d_name[0] == '\0')
-        strcpy(ent.d_name, info.fname);
+    if(_dirent.d_name[0] == '\0')
+        strcpy(_dirent.d_name, info.fname);
 
     if(info.fattrib & AM_DIR)
-        ent.d_type = DT_DIR;
+        _dirent.d_type = DT_DIR;
 
-    return &ent;
+    return &_dirent;
 }
 
 int chdir(const char *path)
@@ -782,8 +784,11 @@ int _fstat(int file, struct stat *st)
 			file == (intptr_t)stderr ||
 			file == (intptr_t)stdin)
 	{
-		st->st_size = 1;
-		st->st_mode = S_IFCHR;
+		if(st)
+		{
+			st->st_size = 1;
+			st->st_mode = S_IFCHR;
+		}
 		res = 0;
 	}
 	else
@@ -794,12 +799,17 @@ int _fstat(int file, struct stat *st)
 		{
 			if(fd->mode & S_IFREG)
 			{
-				st->st_size = f_size(&fd->file);
+				if(st)
+					st->st_size = f_size(&fd->file);
 			}
 			if(fd->mode & S_IFIFO)
-				st->st_size = fd->size;
+			{
+				if(st)
+					st->st_size = fd->size;
+			}
 
-			st->st_mode = fd->mode;
+			if(st)
+				st->st_mode = fd->mode;
 
 			res = 0;
 		}
@@ -832,11 +842,13 @@ long int _ftell(int file)
  */
 int _stat(char *file, struct stat *st)
 {
-	int fd = _open(file, FREAD, 0);
-	if(fd != EOF)
-		fd = _fstat(fd, st);
+	int res = EOF;
+	int fd = _open(file, O_RDONLY, 0);
+	if(fd == EOF)
+		return EOF;
+	res = _fstat(fd, st);
 	_close(fd);
-	return fd;
+	return res;
 }
 
 /**
@@ -897,7 +909,7 @@ int _unlink(char *name)
 	return res == FR_OK ? 0 : EOF;
 }
 
-int _rename(const char *oldname, const char *newname)
+int rename(const char *oldname, const char *newname)
 {
 	FRESULT res = f_rename((const TCHAR*)oldname, (const TCHAR*)newname);
 	return res == FR_OK ? 0 : EOF;
@@ -1010,12 +1022,84 @@ _VOID _free_r(struct _reent *re, _PTR ptr) {
 int _gettimeofday(struct timeval *tp, struct timezone *tzp)
 {
 	(void)tzp;
-#if !USE_HARDWARE_TIME_DRIVER
-	(void)tp;
-#endif
+
 	get_hw_time((unsigned long*)&tp->tv_sec, (unsigned long*)&tp->tv_usec);
 
 	return 0;
+}
+
+#define FIRSTYEAR     1900		// start year
+#define FIRSTDAY      1			// 1.1.1900 was a Monday (0 = Sunday)
+#define NTP_TZ 		  13 		// 13 hours offset
+const char DayOfMonth[12] = { 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+
+/**
+ * Note, Mike Stuart:
+ * this code is based on that from ntpclient.c (c) 2006 by Till Harbaum <till@harbaum.org>
+ * time conversion part based on code published by
+ * peter dannegger - danni(at)specs.de on mikrocontroller.net
+ */
+struct tm* localtime(const time_t* time)
+{
+
+	int day;
+	int year;
+	int dayofyear;
+	int leap400;
+	int month;
+	time_t sec = *time;
+
+	// ignore dst for now....
+	_lctime.tm_isdst = 0;
+
+	// adjust timezone
+	sec += (3600 * NTP_TZ);
+
+	_lctime.tm_sec = sec % 60;
+	sec /= 60;
+	_lctime.tm_min = sec % 60;
+	sec /= 60;
+	_lctime.tm_hour = sec % 24;
+	day = sec / 24;
+
+	// weekday
+	_lctime.tm_wday = (day + FIRSTDAY) % 7;
+
+	year = FIRSTYEAR % 100;                       // 0..99
+	leap400 = 4 - ((FIRSTYEAR - 1) / 100 & 3);    // 4, 3, 2, 1
+
+	for(;;)
+	{
+		dayofyear = 365;
+		if((year & 3) == 0)
+		{
+			dayofyear = 366;                                  // leap year
+			if(year == 0 || year == 100 || year == 200)     // 100 year exception
+			{
+				if( --leap400 )                                 // 400 year exception
+					dayofyear = 365;
+			}
+		}
+		if(day < dayofyear)
+			break;
+		day -= dayofyear;
+		year++;                                     // 00..136 / 99..235
+	}
+
+	_lctime.tm_yday = dayofyear;
+	_lctime.tm_year = year + FIRSTYEAR / 100 * 100;      // + century
+
+
+	if((dayofyear & 1) && (day > 58))               // no leap year and after 28.2.
+		day++;                                      // skip 29.2.
+
+	for(month = 1; day >= DayOfMonth[month-1]; month++)
+		day -= DayOfMonth[month-1];
+
+	_lctime.tm_mon = month;                            // 1..12
+	_lctime.tm_mday = day + 1;                            // 1..31
+
+	return &_lctime;
 }
 
 /**
