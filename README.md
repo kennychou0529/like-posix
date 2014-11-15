@@ -32,6 +32,7 @@ relies upon:
  * int chdir(const char *path)
  * int mkdir(const char *pathname, mode_t mode)
  * int gettimeofday(struct timeval *tp, struct timezone *tzp)
+ * time_t time(time_t* time)
  * struct tm* localtime(time_t* time)
 
 **minimal system calls**

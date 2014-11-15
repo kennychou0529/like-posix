@@ -50,6 +50,22 @@
  extern "C" {
 #endif
 
+#ifndef FILE_TABLE_OFFSET
+#error FILE_TABLE_OFFSET must be defined - normally defined in likeposix_config.h
+#endif
+#ifndef FILE_TABLE_LENGTH
+#error FILE_TABLE_LENGTH must be defined - normally defined in likeposix_config.h
+#endif
+#ifndef DEVICE_TABLE_LENGTH
+#error DEVICE_TABLE_LENGTH must be defined - normally defined in likeposix_config.h
+#endif
+#ifndef DEVICE_INTERFACE_DIRECTORY
+#error DEVICE_INTERFACE_DIRECTORY must be defined - normally defined in likeposix_config.h
+#endif
+#ifndef USE_HARDWARE_TIME_DRIVER
+#error USE_HARDWARE_TIME_DRIVER must be defined - normally defined in likeposix_config.h
+#endif
+
  /**
   * function pointer to device io control functions
   */
@@ -89,7 +105,7 @@ dev_ioctl_t* install_device(char* name,
 /**
  * get_hw_time must be defined somewhere in the device drivers.
  */
-void get_hw_time(unsigned long* secs, unsigned long* usecs);
+extern void get_hw_time(unsigned long* secs, unsigned long* usecs);
 
 #else
 #define get_hw_time(sec, usec) (void)sec;(void)usec

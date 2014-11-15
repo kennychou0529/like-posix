@@ -71,6 +71,7 @@
  * int chdir(const char *path)
  * int mkdir(const char *pathname, mode_t mode)
  * int gettimeofday(struct timeval *tp, struct timezone *tzp)
+ * time_t time(time_t* time)
  * struct tm* localtime(time_t* time)
  *
  * @file syscalls.c
@@ -1028,6 +1029,13 @@ int _gettimeofday(struct timeval *tp, struct timezone *tzp)
 	return 0;
 }
 
+time_t _time(time_t* time)
+{
+    time_t usec;
+    get_hw_time((unsigned long*)time, (unsigned long*)&usec);
+    return *time;
+}
+
 #define FIRSTYEAR     1900		// start year
 #define FIRSTDAY      1			// 1.1.1900 was a Monday (0 = Sunday)
 #define NTP_TZ 		  13 		// 13 hours offset
@@ -1039,7 +1047,7 @@ const char DayOfMonth[12] = { 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
  * time conversion part based on code published by
  * peter dannegger - danni(at)specs.de on mikrocontroller.net
  */
-struct tm* localtime(const time_t* time)
+struct tm* _localtime(const time_t* time)
 {
 
 	int day;
