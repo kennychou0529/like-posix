@@ -33,7 +33,9 @@ relies upon:
  * int mkdir(const char *pathname, mode_t mode)
  * int gettimeofday(struct timeval *tp, struct timezone *tzp)
  * time_t time(time_t* time)
- * struct tm* localtime(time_t* time)
+ * struct tm* localtime(time_t* time) 
+ * unsigned int sleep(unsigned int secs)
+ * int usleep(useconds_t usecs)
 
 **minimal system calls**
 

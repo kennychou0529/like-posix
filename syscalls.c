@@ -73,6 +73,8 @@
  * int gettimeofday(struct timeval *tp, struct timezone *tzp)
  * time_t time(time_t* time)
  * struct tm* localtime(time_t* time)
+ * unsigned int sleep(unsigned int secs)
+ * int usleep(useconds_t usecs)
  *
  * @file syscalls.c
  * @{
@@ -1108,6 +1110,18 @@ struct tm* _localtime(const time_t* time)
 	_lctime.tm_mday = day + 1;                            // 1..31
 
 	return &_lctime;
+}
+
+unsigned int sleep(unsigned int secs)
+{
+    vTaskDelay((secs*1000)/portTICK_RATE_MS);
+    return 0;
+}
+
+int usleep(useconds_t usecs)
+{
+    vTaskDelay((usecs/1000)/portTICK_RATE_MS);
+    return 0;
 }
 
 /**
