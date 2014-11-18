@@ -39,8 +39,7 @@
 #define DT_REG          2
 
 struct dirent {
-    unsigned char  d_type;      /* type of file; not supported
-                                       by all file system types */
+    unsigned char  d_type;      /* type of file; not supported by all file system types */
     char           d_name[256]; /* filename */
 };
 

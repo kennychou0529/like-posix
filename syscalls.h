@@ -45,6 +45,7 @@
 #include "queue.h"
 #include "ff.h"
 #include "likeposix_config.h"
+#include "termios.h"
 
 #ifdef __cplusplus
  extern "C" {
@@ -66,10 +67,12 @@
 #error USE_HARDWARE_TIME_DRIVER must be defined - normally defined in likeposix_config.h
 #endif
 
+
+ typedef struct _dev_ioctl_t dev_ioctl_t;
  /**
   * function pointer to device io control functions
   */
- typedef int(*dev_ioctl_fn_t)(void*ctx);
+ typedef int(*dev_ioctl_fn_t)(dev_ioctl_t*);
 
  /**
   *  definition of queue pair, use for device driver communication
@@ -82,14 +85,16 @@
  /**
   * device interface definition, used for device driver interfacing.
   */
- typedef struct {
+ struct _dev_ioctl_t{
  	dev_ioctl_fn_t read_enable;		///< pointer to enable device read function
  	dev_ioctl_fn_t write_enable;	///< pointer to enable device write function
+    dev_ioctl_fn_t ioctl;           ///< pointer to device ioctl function
  	dev_ioctl_fn_t open;			///< pointer to open device function
  	dev_ioctl_fn_t close;			///< pointer to close device function
  	void* ctx;						///< a pointer to data that has meaning in the context of the device driver itself.
+    struct termios* termios;        ///< a termios structure to define device settings via termios interface.
  	queue_pair_t pipe;
- }dev_ioctl_t;
+ };
 
 FIL* get_file(int file);
 dev_ioctl_t* get_dev_ioctl(int file);
@@ -97,8 +102,9 @@ dev_ioctl_t* install_device(char* name,
 							void* dev_ctx,
 							dev_ioctl_fn_t read_enable,
 							dev_ioctl_fn_t write_enable,
-							dev_ioctl_fn_t open_dev,
-							dev_ioctl_fn_t close_dev);
+                            dev_ioctl_fn_t open_dev,
+							dev_ioctl_fn_t close_dev,
+							dev_ioctl_fn_t ioctl);
 
 #if USE_HARDWARE_TIME_DRIVER
 

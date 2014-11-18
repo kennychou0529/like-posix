@@ -36,6 +36,8 @@ relies upon:
  * struct tm* localtime(time_t* time) 
  * unsigned int sleep(unsigned int secs)
  * int usleep(useconds_t usecs)
+ * int tcgetattr(int fildes, struct termios *termios_p)
+ * int tcsetattr(int fildes, int when, struct termios *termios_p)
 
 **minimal system calls**
 

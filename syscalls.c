@@ -75,6 +75,8 @@
  * struct tm* localtime(time_t* time)
  * unsigned int sleep(unsigned int secs)
  * int usleep(useconds_t usecs)
+ * int tcgetattr(int fildes, struct termios *termios_p)
+ * int tcsetattr(int fildes, int when, struct termios *termios_p)
  *
  * @file syscalls.c
  * @{
@@ -389,16 +391,18 @@ inline int __determine_mode(const char *name)
  *			driver ioctl functions.
  * @param	read_enable is an ioctl function that can enable a device to read data.
  * @param	write_enable is an ioctl function that can enable a device to write data.
- * @param	open is an ioctl function that can enable a device.
+ * @param   open is an ioctl function that can enable a device.
  * @param	close is an ioctl function that can disable a device.
+ * @param	ioctl is an ioctl function that can set the hardware settings of a device.
  * @retval	returns a pointer to the created dev_ioctl_t structure, or NULL on error.
  */
 dev_ioctl_t* install_device(char* name,
 					void* dev_ctx,
 					dev_ioctl_fn_t read_enable,
 					dev_ioctl_fn_t write_enable,
-					dev_ioctl_fn_t open_dev,
-					dev_ioctl_fn_t close_dev)
+                    dev_ioctl_fn_t open_dev,
+					dev_ioctl_fn_t close_dev,
+					dev_ioctl_fn_t ioctl)
 {
 	FIL f;
 	unsigned char buf[DEVICED_INTERFACE_FILE_SIZE];
@@ -427,12 +431,17 @@ dev_ioctl_t* install_device(char* name,
 				{
 					// create device io structure and populate api
 					filtab.devtab[device] = pvPortMalloc(sizeof(dev_ioctl_t));
-					// note that filtab.devtab[device]->pipe is populated by _open()
-					filtab.devtab[device]->read_enable = read_enable;
-					filtab.devtab[device]->write_enable = write_enable;
-					filtab.devtab[device]->open = open_dev;
-					filtab.devtab[device]->close = close_dev;
-					filtab.devtab[device]->ctx = dev_ctx;
+					if(filtab.devtab[device])
+					{
+                        // note that filtab.devtab[device]->pipe is populated by _open()
+                        filtab.devtab[device]->read_enable = read_enable;
+                        filtab.devtab[device]->write_enable = write_enable;
+                        filtab.devtab[device]->ioctl = ioctl;
+                        filtab.devtab[device]->open = open_dev;
+                        filtab.devtab[device]->close = close_dev;
+                        filtab.devtab[device]->ctx = dev_ctx;
+                        filtab.devtab[device]->termios = NULL;
+					}
 					ret = filtab.devtab[device];
 					log_syslog(NULL, "%s OK", name);
 				}
@@ -515,14 +524,14 @@ int _open(const char *name, int flags, int mode)
 		{
 			// actions to do if everything went right...
 
-			if(fd->mode & S_IFIFO)
+			if((fd->mode & S_IFIFO) && fd->device)
 			{
 				// call device open
 				if(fd->device->open)
-					fd->device->open(fd->device->ctx);
+					fd->device->open(fd->device);
 				// enable reading
 				if((fd->flags & FREAD) && fd->device->read_enable)
-					fd->device->read_enable(fd->device->ctx);
+					fd->device->read_enable(fd->device);
 				// writing is enabled in _write()...
 			}
 		}
@@ -544,11 +553,10 @@ int _close(int file)
 	if(fd)
 	{
 		// disable device IO first
-		if(fd->mode & S_IFIFO)
+		if((fd->mode & S_IFIFO) && fd->device && (fd->device->close))
 		{
 			// call device close
-			if(fd->device->close)
-				fd->device->close(fd->device->ctx);
+			fd->device->close(fd->device);
 		}
 		// then remove the file table entry
 		res = __remove_entry(file);
@@ -586,7 +594,7 @@ int _write(int file, char *buffer, unsigned int count)
 			{
 				f_write(&fd->file, (void*)buffer, (UINT)count, (UINT*)&n);
 			}
-			else if(fd->mode & S_IFIFO)
+			else if((fd->mode & S_IFIFO) && fd->device)
 			{
 				for(n = 0; n < (int)count; n++)
 				{
@@ -596,7 +604,7 @@ int _write(int file, char *buffer, unsigned int count)
 				}
 				// enable the physical device to write
 				if(fd->device->write_enable)
-					fd->device->write_enable(fd->device->ctx);
+					fd->device->write_enable(fd->device);
 			}
 		}
 	}
@@ -631,7 +639,7 @@ int _read(int file, char *buffer, int count)
 			{
 				f_read(&fd->file, (void*)buffer, (UINT)count, (UINT*)&n);
 			}
-			else if(fd->mode & S_IFIFO)
+			else if((fd->mode & S_IFIFO) && fd->device)
 			{
 				for(n = 0; n < count; n++)
 				{
@@ -1038,79 +1046,79 @@ time_t _time(time_t* time)
     return *time;
 }
 
-#define FIRSTYEAR     1900		// start year
-#define FIRSTDAY      1			// 1.1.1900 was a Monday (0 = Sunday)
-#define NTP_TZ 		  13 		// 13 hours offset
-const char DayOfMonth[12] = { 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
-
-/**
- * Note, Mike Stuart:
- * this code is based on that from ntpclient.c (c) 2006 by Till Harbaum <till@harbaum.org>
- * time conversion part based on code published by
- * peter dannegger - danni(at)specs.de on mikrocontroller.net
- */
-struct tm* _localtime(const time_t* time)
-{
-
-	int day;
-	int year;
-	int dayofyear;
-	int leap400;
-	int month;
-	time_t sec = *time;
-
-	// ignore dst for now....
-	_lctime.tm_isdst = 0;
-
-	// adjust timezone
-	sec += (3600 * NTP_TZ);
-
-	_lctime.tm_sec = sec % 60;
-	sec /= 60;
-	_lctime.tm_min = sec % 60;
-	sec /= 60;
-	_lctime.tm_hour = sec % 24;
-	day = sec / 24;
-
-	// weekday
-	_lctime.tm_wday = (day + FIRSTDAY) % 7;
-
-	year = FIRSTYEAR % 100;                       // 0..99
-	leap400 = 4 - ((FIRSTYEAR - 1) / 100 & 3);    // 4, 3, 2, 1
-
-	for(;;)
-	{
-		dayofyear = 365;
-		if((year & 3) == 0)
-		{
-			dayofyear = 366;                                  // leap year
-			if(year == 0 || year == 100 || year == 200)     // 100 year exception
-			{
-				if( --leap400 )                                 // 400 year exception
-					dayofyear = 365;
-			}
-		}
-		if(day < dayofyear)
-			break;
-		day -= dayofyear;
-		year++;                                     // 00..136 / 99..235
-	}
-
-	_lctime.tm_yday = dayofyear;
-	_lctime.tm_year = year + FIRSTYEAR / 100 * 100;      // + century
-
-
-	if((dayofyear & 1) && (day > 58))               // no leap year and after 28.2.
-		day++;                                      // skip 29.2.
-
-	for(month = 1; day >= DayOfMonth[month-1]; month++)
-		day -= DayOfMonth[month-1];
-
-	_lctime.tm_mon = month;                            // 1..12
-	_lctime.tm_mday = day + 1;                            // 1..31
-
-	return &_lctime;
-}
+//#define FIRSTYEAR     1900		// start year
+//#define FIRSTDAY      1			// 1.1.1900 was a Monday (0 = Sunday)
+//#define NTP_TZ 		  13 		// 13 hours offset
+//const char DayOfMonth[12] = { 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+//
+///**
+// * Note, Mike Stuart:
+// * this code is based on that from ntpclient.c (c) 2006 by Till Harbaum <till@harbaum.org>
+// * time conversion part based on code published by
+// * peter dannegger - danni(at)specs.de on mikrocontroller.net
+// */
+//struct tm* _localtime(const time_t* time)
+//{
+//
+//	int day;
+//	int year;
+//	int dayofyear;
+//	int leap400;
+//	int month;
+//	time_t sec = *time;
+//
+//	// ignore dst for now....
+//	_lctime.tm_isdst = 0;
+//
+//	// adjust timezone
+//	sec += (3600 * NTP_TZ);
+//
+//	_lctime.tm_sec = sec % 60;
+//	sec /= 60;
+//	_lctime.tm_min = sec % 60;
+//	sec /= 60;
+//	_lctime.tm_hour = sec % 24;
+//	day = sec / 24;
+//
+//	// weekday
+//	_lctime.tm_wday = (day + FIRSTDAY) % 7;
+//
+//	year = FIRSTYEAR % 100;                       // 0..99
+//	leap400 = 4 - ((FIRSTYEAR - 1) / 100 & 3);    // 4, 3, 2, 1
+//
+//	for(;;)
+//	{
+//		dayofyear = 365;
+//		if((year & 3) == 0)
+//		{
+//			dayofyear = 366;                                  // leap year
+//			if(year == 0 || year == 100 || year == 200)     // 100 year exception
+//			{
+//				if( --leap400 )                                 // 400 year exception
+//					dayofyear = 365;
+//			}
+//		}
+//		if(day < dayofyear)
+//			break;
+//		day -= dayofyear;
+//		year++;                                     // 00..136 / 99..235
+//	}
+//
+//	_lctime.tm_yday = dayofyear;
+//	_lctime.tm_year = year + FIRSTYEAR / 100 * 100;      // + century
+//
+//
+//	if((dayofyear & 1) && (day > 58))               // no leap year and after 28.2.
+//		day++;                                      // skip 29.2.
+//
+//	for(month = 1; day >= DayOfMonth[month-1]; month++)
+//		day -= DayOfMonth[month-1];
+//
+//	_lctime.tm_mon = month;                            // 1..12
+//	_lctime.tm_mday = day + 1;                            // 1..31
+//
+//	return &_lctime;
+//}
 
 unsigned int sleep(unsigned int secs)
 {
@@ -1122,6 +1130,69 @@ int usleep(useconds_t usecs)
 {
     vTaskDelay((usecs/1000)/portTICK_RATE_MS);
     return 0;
+}
+
+int tcgetattr(int fildes, struct termios *termios_p)
+{
+    int ret = -1;
+    if(termios_p == NULL || isatty(fildes) == 0)
+        return ret;
+
+    memset(termios_p, 0, sizeof(struct termios));
+
+    if(fildes == STDOUT_FILENO || fildes == STDERR_FILENO || fildes == (intptr_t)stdout || fildes == (intptr_t)stderr)
+    {
+        termios_p->c_cflag = B115200|CS8;
+        ret = 0;
+    }
+    else if(fildes == STDIN_FILENO || fildes == (intptr_t)stdin)
+    {
+        termios_p->c_cflag = B115200|CS8;
+        ret = 0;
+    }
+    else
+    {
+        _tinystat_t* fd = __get_entry(fildes);
+
+        if(fd->device && fd->device->ioctl)
+        {
+            fd->device->termios = termios_p;
+            ret = fd->device->ioctl(fd->device);
+            fd->device->termios = NULL;
+        }
+    }
+
+    return ret;
+}
+
+int tcsetattr(int fildes, int when, const struct termios *termios_p)
+{
+    (void)when;
+    int ret = -1;
+    if(termios_p == NULL || isatty(fildes) == 0)
+        return ret;
+
+    if(fildes == STDOUT_FILENO || fildes == STDERR_FILENO || fildes == (intptr_t)stdout || fildes == (intptr_t)stderr)
+    {
+
+    }
+    else if(fildes == STDIN_FILENO || fildes == (intptr_t)stdin)
+    {
+
+    }
+    else
+    {
+        _tinystat_t* fd = __get_entry(fildes);
+
+        if(fd->device && fd->device->ioctl)
+        {
+            fd->device->termios = (struct termios *)termios_p;
+            ret = fd->device->ioctl(fd->device);
+            fd->device->termios = NULL;
+        }
+    }
+
+    return ret;
 }
 
 /**
