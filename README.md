@@ -33,7 +33,6 @@ relies upon:
  * int mkdir(const char *pathname, mode_t mode)
  * int gettimeofday(struct timeval *tp, struct timezone *tzp)
  * time_t time(time_t* time)
- * struct tm* localtime(time_t* time) 
  * unsigned int sleep(unsigned int secs)
  * int usleep(useconds_t usecs)
  * int tcgetattr(int fildes, struct termios *termios_p)
@@ -109,8 +108,15 @@ the file likeposix_config.h is required at project level, to configure like-posi
 #define DEVICE_INTERFACE_DIRECTORY 	"/dev/"
 /**
  * use a time driver defined in the device drivers for your target.
+ * the hardware timer driver must define the following functon:
+ * extern void get_hw_time(unsigned long* secs, unsigned long* usecs);
  */
 #define USE_HARDWARE_TIME_DRIVER 1
+/**
+ * this is a hack that adds an ofset in seconds onto the time returned by time/gettimeofday.
+ * corrects time set by NTP for your timezone. 12 hours for NZT
+ */
+#define TIMEZONE_OFFSET (12 * 60 * 60)
 
 #endif /* LIKEPOSIX_CONFIG_H_ */
 

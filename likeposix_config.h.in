@@ -55,5 +55,14 @@
  * location where devices get installed to
  */
 #define DEVICE_INTERFACE_DIRECTORY 	"/dev/"
+/**
+ * use a time driver defined in the device drivers for your target.
+ */
+#define USE_HARDWARE_TIME_DRIVER 1
+/**
+ * this is a hack that adds an ofset in seconds onto the time returned by time/gettimeofday.
+ * corrects time set by NTP for your timezone. 12 hours for NZT
+ */
+#define TIMEZONE_OFFSET (12 * 60 * 60)
 
 #endif /* LIKEPOSIX_CONFIG_H_ */

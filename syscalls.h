@@ -66,6 +66,9 @@
 #ifndef USE_HARDWARE_TIME_DRIVER
 #error USE_HARDWARE_TIME_DRIVER must be defined - normally defined in likeposix_config.h
 #endif
+#ifndef TIMEZONE_OFFSET
+#error TIMEZONE_OFFSET must be defined - normally defined in likeposix_config.h
+#endif
 
 
  typedef struct _dev_ioctl_t dev_ioctl_t;
