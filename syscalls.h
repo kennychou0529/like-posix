@@ -40,12 +40,19 @@
 #define LIKE_POSIX_SYSCALLS_H_
 
 #include <stdint.h>
+
+#include "likeposix_config.h"
+#include "termios.h"
+
+#if USE_FREERTOS
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
+#endif
+
+#if USE_DRIVER_FAT_FILESYSTEM
 #include "ff.h"
-#include "likeposix_config.h"
-#include "termios.h"
+#endif
 
 #ifdef __cplusplus
  extern "C" {
@@ -63,14 +70,8 @@
 #ifndef DEVICE_INTERFACE_DIRECTORY
 #error DEVICE_INTERFACE_DIRECTORY must be defined - normally defined in likeposix_config.h
 #endif
-#ifndef USE_HARDWARE_TIME_DRIVER
-#error USE_HARDWARE_TIME_DRIVER must be defined - normally defined in likeposix_config.h
-#endif
-#ifndef TIMEZONE_OFFSET
-#error TIMEZONE_OFFSET must be defined - normally defined in likeposix_config.h
-#endif
 
-
+#if USE_FREERTOS
  typedef struct _dev_ioctl_t dev_ioctl_t;
  /**
   * function pointer to device io control functions
@@ -109,15 +110,6 @@ dev_ioctl_t* install_device(char* name,
 							dev_ioctl_fn_t close_dev,
 							dev_ioctl_fn_t ioctl);
 
-#if USE_HARDWARE_TIME_DRIVER
-
-/**
- * get_hw_time must be defined somewhere in the device drivers.
- */
-extern void get_hw_time(unsigned long* secs, unsigned long* usecs);
-
-#else
-#define get_hw_time(sec, usec) (void)sec;(void)usec
 #endif
 
 #ifdef __cplusplus

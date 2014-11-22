@@ -31,7 +31,7 @@
  */
 
 /**
- * @defgoup syscalls System Calls
+ * @defgroup syscalls System Calls
  *
  * A set of system calls and support functions, aimed to link up:
  *
@@ -141,7 +141,6 @@ static const unsigned short heapSTRUCT_SIZE	=
  		( sizeof( xBlockLink ) % portBYTE_ALIGNMENT ) );
 static _filtab_t filtab;
 struct dirent _dirent;
-struct tm _lctime;
 
 
 /**
@@ -1027,34 +1026,6 @@ _PTR _malloc_r(struct _reent *re, size_t size) {
 _VOID _free_r(struct _reent *re, _PTR ptr) {
 	(void)re;
 	vPortFree(ptr);
-}
-
-int _gettimeofday(struct timeval *tp, struct timezone *tzp)
-{
-	(void)tzp;
-	get_hw_time((unsigned long*)&tp->tv_sec, (unsigned long*)&tp->tv_usec);
-	tp->tv_sec += TIMEZONE_OFFSET;
-	return 0;
-}
-
-time_t _time(time_t* time)
-{
-    time_t usec;
-    get_hw_time((unsigned long*)time, (unsigned long*)&usec);
-    *time += TIMEZONE_OFFSET;
-    return *time;
-}
-
-unsigned int sleep(unsigned int secs)
-{
-    vTaskDelay((secs*1000)/portTICK_RATE_MS);
-    return 0;
-}
-
-int usleep(useconds_t usecs)
-{
-    vTaskDelay((usecs/1000)/portTICK_RATE_MS);
-    return 0;
 }
 
 int tcgetattr(int fildes, struct termios *termios_p)
