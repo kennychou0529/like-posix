@@ -90,6 +90,7 @@
   * device interface definition, used for device driver interfacing.
   */
  struct _dev_ioctl_t{
+    unsigned int timeout;           ///< io timeout in milliseconds
  	dev_ioctl_fn_t read_enable;		///< pointer to enable device read function
  	dev_ioctl_fn_t write_enable;	///< pointer to enable device write function
     dev_ioctl_fn_t ioctl;           ///< pointer to device ioctl function
@@ -100,8 +101,7 @@
  	queue_pair_t pipe;
  };
 
-FIL* get_file(int file);
-dev_ioctl_t* get_dev_ioctl(int file);
+void init_likeposix();
 dev_ioctl_t* install_device(char* name,
 							void* dev_ctx,
 							dev_ioctl_fn_t read_enable,
