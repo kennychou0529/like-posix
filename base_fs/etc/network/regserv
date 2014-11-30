@@ -1,4 +1,0 @@
-# configuration for cust0.120.1
-port 9876
-period 60000
-api /api/v1.0/registry

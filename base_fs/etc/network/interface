@@ -1,7 +1,13 @@
-# ip address to use if static
-ipaddr 192.168.0.10
-netmask 255.255.255.0
-# gateway/default router ip address
-gateway 192.168.0.1
-# choose a mac address...
-macaddr xx:xx:xx:xx:xx:xx
+ipaddr 172.16.133.83
+#ipaddr 192.168.20.115
+#netmask 255.255.255.0
+netmask 255.255.224.0
+#535
+#gateway 172.16.159.254
+#558
+#gateway 172.16.63.254
+#175
+#gateway 172.16.191.254
+gateway 172.16.159.254
+#gateway 192.168.20.1
+macaddr 00:0d:ca:01:32:0e

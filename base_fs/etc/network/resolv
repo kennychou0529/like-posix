@@ -1,3 +1,2 @@
-hostname setahostname
-#resolv dhcp
-resolv static
+hostname default
+resolv dhcp
