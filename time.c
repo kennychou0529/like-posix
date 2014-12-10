@@ -24,7 +24,7 @@
  * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
  * OF SUCH DAMAGE.
  *
- * This file is part of the freertos-posix-wrapper project, <https://github.com/drmetal/freertos-posix-wrapper>
+ * This file is part of the like-posix project, <https://github.com/drmetal/like-posix>
  *
  * Author: Michael Stuart <spaceorbot@gmail.com>
  *

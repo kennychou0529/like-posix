@@ -30,21 +30,27 @@
  *
  */
 
-#ifndef DIRENT_H_
-#define DIRENT_H_
+#if USE_DRIVER_LWIP_NET
+#include "lwip/sockets.h"
 
-#include "ff.h"
+int socket(int namespace, int style, int protocol);
+int accept(int socket, struct sockaddr *addr, socklen_t *length_ptr);
 
-#define DT_DIR          1
-#define DT_REG          2
+#define bind(a,b,c)           lwip_bind(a,b,c)
+#define shutdown(a,b)         lwip_shutdown(a,b)
+#define closesocket(s)        close(s)
+#define connect(a,b,c)        lwip_connect(a,b,c)
+#define getsockname(a,b,c)    lwip_getsockname(a,b,c)
+#define getpeername(a,b,c)    lwip_getpeername(a,b,c)
+#define setsockopt(a,b,c,d,e) lwip_setsockopt(a,b,c,d,e)
+#define getsockopt(a,b,c,d,e) lwip_getsockopt(a,b,c,d,e)
+#define listen(a,b)           lwip_listen(a,b)
+#define recv(a,b,c,d)         lwip_recv(a,b,c,d)
+#define recvfrom(a,b,c,d,e,f) lwip_recvfrom(a,b,c,d,e,f)
+#define send(a,b,c,d)         lwip_send(a,b,c,d)
+#define sendto(a,b,c,d,e,f)   lwip_sendto(a,b,c,d,e,f)
+#define select(a,b,c,d,e)     lwip_select(a,b,c,d,e)
+#define ioctlsocket(a,b,c)    lwip_ioctl(a,b,c)
 
-struct dirent {
-    unsigned char  d_type;      /* type of file; not supported by all file system types */
-    char           d_name[256]; /* filename */
-};
-
-DIR* opendir(const char *name);
-int closedir(DIR *dirp);
-struct dirent* readdir(DIR *dirp);
-
-#endif /* DIRENT_H_ */
+#define fcntl(a,b,c)          lwip_fcntl(a,b,c)
+#endif

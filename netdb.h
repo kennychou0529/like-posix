@@ -30,21 +30,11 @@
  *
  */
 
-#ifndef DIRENT_H_
-#define DIRENT_H_
+#include "lwip/netdb.h"
 
-#include "ff.h"
-
-#define DT_DIR          1
-#define DT_REG          2
-
-struct dirent {
-    unsigned char  d_type;      /* type of file; not supported by all file system types */
-    char           d_name[256]; /* filename */
-};
-
-DIR* opendir(const char *name);
-int closedir(DIR *dirp);
-struct dirent* readdir(DIR *dirp);
-
-#endif /* DIRENT_H_ */
+#define gethostbyname(name) lwip_gethostbyname(name)
+#define gethostbyname_r(name, ret, buf, buflen, result, h_errnop) \
+       lwip_gethostbyname_r(name, ret, buf, buflen, result, h_errnop)
+#define freeaddrinfo(addrinfo) lwip_freeaddrinfo(addrinfo)
+#define getaddrinfo(nodname, servname, hints, res) \
+       lwip_getaddrinfo(nodname, servname, hints, res)

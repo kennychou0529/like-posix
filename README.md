@@ -82,7 +82,7 @@ the file likeposix_config.h is required at project level, to configure like-posi
 ``` c
 
 /**
- * sample configuration for the freertos-posix-wrapper project.
+ * sample configuration for the like-posix project.
  */
 
 #ifndef LIKEPOSIX_CONFIG_H_
