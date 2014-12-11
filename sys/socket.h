@@ -30,6 +30,7 @@
  *
  */
 
+#include "syscalls.h"
 #include "lwip/sockets.h"
 
 #if ENABLE_LIKEPOSIX_SOCKETS
