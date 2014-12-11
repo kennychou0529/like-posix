@@ -70,6 +70,9 @@
 #ifndef DEVICE_INTERFACE_DIRECTORY
 #error DEVICE_INTERFACE_DIRECTORY must be defined - normally defined in likeposix_config.h
 #endif
+#ifndef ENABLE_LIKEPOSIX_SOCKETS
+#error ENABLE_LIKEPOSIX_SOCKETS must be defined - normally defined in likeposix_config.h
+#endif
 
 #if USE_FREERTOS
  typedef struct _dev_ioctl_t dev_ioctl_t;

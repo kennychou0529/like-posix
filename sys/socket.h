@@ -30,15 +30,32 @@
  *
  */
 
-#if USE_DRIVER_LWIP_NET
 #include "lwip/sockets.h"
 
-int socket(int namespace, int style, int protocol);
-int accept(int socket, struct sockaddr *addr, socklen_t *length_ptr);
+#if ENABLE_LIKEPOSIX_SOCKETS
 
+int socket(int namespace, int style, int protocol);
+int closesocket(int socket);
+int accept(int socket, struct sockaddr *addr, socklen_t *length_ptr);
+int connect(int socket, struct sockaddr *addr, socklen_t length);
+int bind(int socket, struct sockaddr *addr, socklen_t length);
+int shutdown(int socket, int how);
+int getsockname(int socket, struct sockaddr *addr, socklen_t *length);
+int getpeername(int socket, struct sockaddr *addr, socklen_t *length);
+int setsockopt(int socket, int level, int optname, void *optval, socklen_t optlen);
+int getsockopt(int socket, int level, int optname, void *optval, socklen_t *optlen);
+int listen(int socket, int n);
+int recv(int socket, void *buffer, size_t size, int flags);
+int recvfrom(int socket, void *buffer, size_t size, int flags, struct sockaddr *addr, socklen_t *length);
+int send(int socket, const void *buffer, size_t size, int flags);
+int sendto(int socket, const void *buffer, size_t size, int flags, struct sockaddr *addr, socklen_t length);
+int ioctlsocket(int socket, int cmd, void* argp);
+#else
+
+#define accept(a,b,c)         lwip_accept(a,b,c)
 #define bind(a,b,c)           lwip_bind(a,b,c)
 #define shutdown(a,b)         lwip_shutdown(a,b)
-#define closesocket(s)        close(s)
+#define closesocket(s)        lwip_close(s)
 #define connect(a,b,c)        lwip_connect(a,b,c)
 #define getsockname(a,b,c)    lwip_getsockname(a,b,c)
 #define getpeername(a,b,c)    lwip_getpeername(a,b,c)
@@ -49,8 +66,8 @@ int accept(int socket, struct sockaddr *addr, socklen_t *length_ptr);
 #define recvfrom(a,b,c,d,e,f) lwip_recvfrom(a,b,c,d,e,f)
 #define send(a,b,c,d)         lwip_send(a,b,c,d)
 #define sendto(a,b,c,d,e,f)   lwip_sendto(a,b,c,d,e,f)
+#define socket(a,b,c)         lwip_socket(a,b,c)
 #define select(a,b,c,d,e)     lwip_select(a,b,c,d,e)
 #define ioctlsocket(a,b,c)    lwip_ioctl(a,b,c)
 
-#define fcntl(a,b,c)          lwip_fcntl(a,b,c)
 #endif
